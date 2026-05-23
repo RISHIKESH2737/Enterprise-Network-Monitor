@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enterprise Network Monitor</title>
+
+    <meta http-equiv="refresh" content="10">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <h1>Enterprise Network Monitor</h1>
+
+    <div class="container">
+
+        {% for device in results %}
+
+        <div class="card {{ 'online' if device.status == 'ONLINE' else 'offline' }}">
+
+            <h2>{{ device.name }}</h2>
+
+            <p><b>IP:</b> {{ device.ip }}</p>
+
+            <p><b>Status:</b> {{ device.status }}</p>
+
+            <p><b>Response:</b> {{ device.response_time }} ms</p>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</body>
+</html>
