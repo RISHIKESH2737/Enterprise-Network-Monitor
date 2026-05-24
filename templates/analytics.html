@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Network Analytics</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+<body>
+
+    <div class="header">
+
+        <h1>Historical Analytics Dashboard</h1>
+
+        <p>
+            Monitoring History & Infrastructure Logs
+        </p>
+
+        <a
+            href="/"
+            class="back-btn"
+        >
+            ← Back to Dashboard
+        </a>
+
+    </div>
+
+    <div class="table-container">
+
+        <h2>Latest Monitoring Logs</h2>
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Device</th>
+                    <th>IP Address</th>
+                    <th>Status</th>
+                    <th>Response Time</th>
+                    <th>Timestamp</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for row in history %}
+
+                <tr>
+
+                    <td>{{ row[1] }}</td>
+
+                    <td>{{ row[2] }}</td>
+
+                    <td>
+
+                        {% if row[3] == "ONLINE" %}
+
+                            <span class="status-badge online-badge">
+                                ONLINE
+                            </span>
+
+                        {% else %}
+
+                            <span class="status-badge offline-badge">
+                                OFFLINE
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+
+                        {% if row[3] == "ONLINE" %}
+
+                            {{ row[4] }} ms
+
+                        {% else %}
+
+                            Timeout
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>{{ row[5] }}</td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</body>
+
+</html>

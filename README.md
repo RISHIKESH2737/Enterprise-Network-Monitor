@@ -10,6 +10,9 @@ A professional, Python-based network monitoring dashboard designed for real-time
 * **Data & Config:** JSON configuration, CSV reporting, and detailed log files
 
 ---
+## Dashboard Preview
+
+![Dashboard Screenshot](screenshots/dashboard.png)
 
 ## Features
 * **Real-Time Monitoring:** Live tracking of device status and response times via a clean Flask web dashboard.

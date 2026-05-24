@@ -1,3 +1,4 @@
 colorama
 tabulate
 flask
+flask-socketio

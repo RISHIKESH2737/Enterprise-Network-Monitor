@@ -31,15 +31,12 @@
         "name": "Cloudflare Server",
         "ip": "104.16.132.229"
     },
-
     {
-    "name": "Manga Fier",
-    "ip": "192.168.100.250"
+        "name": "Manga Fier",
+        "ip": "192.168.100.250"
     },
-
     {
-    "name": "Velside",
-    "ip": "192.168.29.1"
+        "name": "Velside",
+        "ip": "192.168.29.1"
     }
-
 ]

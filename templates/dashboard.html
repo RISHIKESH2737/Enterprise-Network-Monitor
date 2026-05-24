@@ -1,29 +1,253 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
     <title>Enterprise Network Monitor</title>
 
-    <meta http-equiv="refresh" content="10">
+    <!-- CSS -->
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    <!-- GOOGLE FONT -->
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
 </head>
+
 <body>
 
-    <h1>Enterprise Network Monitor</h1>
+    <!-- ========================= -->
+    <!-- ANALYTICS BUTTON -->
+    <!-- ========================= -->
 
-    <div class="container">
+    <div
+        style="
+            text-align:center;
+            margin-top:20px;
+            margin-bottom:25px;
+        "
+    >
+
+        <a
+            href="/analytics"
+            style="
+                color:white;
+                text-decoration:none;
+                padding:12px 20px;
+                background:#2563eb;
+                border-radius:10px;
+                font-weight:600;
+            "
+        >
+            View Historical Analytics
+        </a>
+
+    </div>
+
+    <!-- ========================= -->
+    <!-- HEADER -->
+    <!-- ========================= -->
+
+    <div class="header">
+
+        <h1>Enterprise Network Monitor</h1>
+
+        <p>
+            Real-Time Infrastructure Monitoring Dashboard
+        </p>
+
+    </div>
+
+    <!-- ========================= -->
+    <!-- SEARCH BAR -->
+    <!-- ========================= -->
+
+    <div class="search-container">
+
+        <input
+            type="text"
+            id="searchInput"
+            placeholder="Search devices by name or IP..."
+        >
+
+    </div>
+
+    <!-- ========================= -->
+    <!-- STATS -->
+    <!-- ========================= -->
+
+    <div class="stats-container">
+
+        <!-- TOTAL DEVICES -->
+
+        <div class="stat-card">
+
+            <h2 id="totalDevices">
+                {{ total_devices }}
+            </h2>
+
+            <p>Total Devices</p>
+
+        </div>
+
+        <!-- ONLINE DEVICES -->
+
+        <div class="stat-card online-card">
+
+            <h2 id="onlineDevices">
+                {{ online_devices }}
+            </h2>
+
+            <p>Online Devices</p>
+
+        </div>
+
+        <!-- OFFLINE DEVICES -->
+
+        <div class="stat-card offline-card">
+
+            <h2 id="offlineDevices">
+                {{ offline_devices }}
+            </h2>
+
+            <p>Offline Devices</p>
+
+        </div>
+
+        <!-- AVG RESPONSE -->
+
+        <div class="stat-card">
+
+            <h2 id="avgResponse">
+                {{ avg_response }} ms
+            </h2>
+
+            <p>Average Response</p>
+
+        </div>
+
+    </div>
+
+    <!-- ========================= -->
+    <!-- CHARTS -->
+    <!-- ========================= -->
+
+    <div class="charts-grid">
+
+        <!-- RESPONSE CHART -->
+
+        <div class="chart-container">
+
+            <h2>Response Time Analytics</h2>
+
+            <canvas id="responseChart"></canvas>
+
+        </div>
+
+        <!-- STATUS PIE CHART -->
+
+        <div class="chart-container">
+
+            <h2>Network Status Distribution</h2>
+
+            <canvas id="statusChart"></canvas>
+
+        </div>
+
+    </div>
+
+    <!-- ========================= -->
+    <!-- DEVICE CARDS -->
+    <!-- ========================= -->
+
+    <div
+        class="container"
+        id="deviceContainer"
+    >
 
         {% for device in results %}
 
-        <div class="card {{ 'online' if device.status == 'ONLINE' else 'offline' }}">
+        <div
+            class="card {{ 'online' if device.status == 'ONLINE' else 'offline' }}"
+        >
+
+            <!-- DEVICE NAME -->
 
             <h2>{{ device.name }}</h2>
 
-            <p><b>IP:</b> {{ device.ip }}</p>
+            <!-- IP -->
 
-            <p><b>Status:</b> {{ device.status }}</p>
+            <p>
 
-            <p><b>Response:</b> {{ device.response_time }} ms</p>
+                <b>IP Address:</b>
+
+                {{ device.ip }}
+
+            </p>
+
+            <!-- STATUS -->
+
+            <p>
+
+                <b>Status:</b>
+
+                {% if device.status == "ONLINE" %}
+
+                    <span class="status-badge online-badge">
+                        ONLINE
+                    </span>
+
+                {% else %}
+
+                    <span class="status-badge offline-badge">
+                        OFFLINE
+                    </span>
+
+                {% endif %}
+
+            </p>
+
+            <!-- RESPONSE TIME -->
+
+            <p>
+
+                <b>Response Time:</b>
+
+                {% if device.status == "ONLINE" %}
+
+                    {{ device.response_time }} ms
+
+                {% else %}
+
+                    Timeout
+
+                {% endif %}
+
+            </p>
+
+            <!-- TIMESTAMP -->
+
+            <p>
+
+                <b>Last Scan:</b>
+
+                {{ device.timestamp }}
+
+            </p>
 
         </div>
 
@@ -31,5 +255,371 @@
 
     </div>
 
+    <!-- ========================= -->
+    <!-- FOOTER -->
+    <!-- ========================= -->
+
+    <div class="footer">
+
+        Enterprise Network Monitor • Flask + Python + SocketIO
+
+    </div>
+
+    <!-- ========================= -->
+    <!-- SOCKET.IO -->
+    <!-- ========================= -->
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+    <!-- ========================= -->
+    <!-- CHART.JS -->
+    <!-- ========================= -->
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- ========================= -->
+    <!-- SEARCH FILTER -->
+    <!-- ========================= -->
+
+    <script>
+
+        const searchInput =
+            document.getElementById("searchInput");
+
+        searchInput.addEventListener("keyup", function () {
+
+            const searchValue =
+                searchInput.value.toLowerCase();
+
+            const cards =
+                document.querySelectorAll(".card");
+
+            cards.forEach(card => {
+
+                const text =
+                    card.innerText.toLowerCase();
+
+                if (text.includes(searchValue)) {
+
+                    card.style.display = "block";
+
+                } else {
+
+                    card.style.display = "none";
+
+                }
+
+            });
+
+        });
+
+    </script>
+
+    <!-- ========================= -->
+    <!-- INITIAL CHART DATA -->
+    <!-- ========================= -->
+
+    <script>
+
+        const deviceNames = {{ results
+            | map(attribute='name')
+            | list
+            | tojson }};
+
+        const responseTimes = {{ results
+            | map(attribute='response_time')
+            | list
+            | tojson }};
+
+        // =========================
+        // RESPONSE BAR CHART
+        // =========================
+
+        const responseCtx =
+            document.getElementById(
+                'responseChart'
+            );
+
+        const responseChart =
+            new Chart(responseCtx, {
+
+            type: 'bar',
+
+            data: {
+
+                labels: deviceNames,
+
+                datasets: [{
+
+                    label: 'Response Time (ms)',
+
+                    data: responseTimes,
+
+                    borderWidth: 2
+
+                }]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                animation: true,
+
+                plugins: {
+
+                    legend: {
+
+                        labels: {
+
+                            color: 'white'
+
+                        }
+
+                    }
+
+                },
+
+                scales: {
+
+                    x: {
+
+                        ticks: {
+
+                            color: 'white'
+
+                        }
+
+                    },
+
+                    y: {
+
+                        ticks: {
+
+                            color: 'white'
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        });
+
+        // =========================
+        // PIE CHART
+        // =========================
+
+        const statusCtx =
+            document.getElementById(
+                'statusChart'
+            );
+
+        const statusChart =
+            new Chart(statusCtx, {
+
+            type: 'pie',
+
+            data: {
+
+                labels: [
+
+                    'Online',
+                    'Offline'
+
+                ],
+
+                datasets: [{
+
+                    data: [
+
+                        {{ online_devices }},
+                        {{ offline_devices }}
+
+                    ]
+
+                }]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                animation: true,
+
+                plugins: {
+
+                    legend: {
+
+                        labels: {
+
+                            color: 'white'
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        });
+
+    </script>
+
+    <!-- ========================= -->
+    <!-- LIVE SOCKET UPDATES -->
+    <!-- ========================= -->
+
+    <script>
+
+        const socket = io();
+
+        socket.on(
+            "network_update",
+            function(data) {
+
+            console.log(
+                "Live Update:",
+                data
+            );
+
+            // =========================
+            // UPDATE STATS
+            // =========================
+
+            document.getElementById(
+                "totalDevices"
+            ).innerText =
+                data.total_devices;
+
+            document.getElementById(
+                "onlineDevices"
+            ).innerText =
+                data.online_devices;
+
+            document.getElementById(
+                "offlineDevices"
+            ).innerText =
+                data.offline_devices;
+
+            document.getElementById(
+                "avgResponse"
+            ).innerText =
+                data.avg_response + " ms";
+
+            // =========================
+            // UPDATE DEVICE CARDS
+            // =========================
+
+            const container =
+                document.getElementById(
+                    "deviceContainer"
+                );
+
+            container.innerHTML = "";
+
+            data.results.forEach(device => {
+
+                const statusBadge =
+
+                    device.status === "ONLINE"
+
+                    ?
+
+                    `<span class="status-badge online-badge">
+                        ONLINE
+                    </span>`
+
+                    :
+
+                    `<span class="status-badge offline-badge">
+                        OFFLINE
+                    </span>`;
+
+                const response =
+
+                    device.status === "ONLINE"
+
+                    ?
+
+                    `${device.response_time} ms`
+
+                    :
+
+                    `Timeout`;
+
+                const card = `
+
+                    <div class="card ${device.status.toLowerCase()}">
+
+                        <h2>${device.name}</h2>
+
+                        <p>
+                            <b>IP Address:</b>
+                            ${device.ip}
+                        </p>
+
+                        <p>
+                            <b>Status:</b>
+                            ${statusBadge}
+                        </p>
+
+                        <p>
+                            <b>Response Time:</b>
+                            ${response}
+                        </p>
+
+                        <p>
+                            <b>Last Scan:</b>
+                            ${device.timestamp}
+                        </p>
+
+                    </div>
+
+                `;
+
+                container.innerHTML += card;
+
+            });
+
+            // =========================
+            // UPDATE BAR CHART
+            // =========================
+
+            responseChart.data.labels =
+                data.results.map(
+                    d => d.name
+                );
+
+            responseChart.data.datasets[0].data =
+                data.results.map(
+                    d => d.response_time
+                );
+
+            responseChart.update();
+
+            // =========================
+            // UPDATE PIE CHART
+            // =========================
+
+            statusChart.data.datasets[0].data = [
+
+                data.online_devices,
+                data.offline_devices
+
+            ];
+
+            statusChart.update();
+
+        });
+
+    </script>
+
 </body>
+
 </html>
