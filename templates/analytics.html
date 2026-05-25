@@ -1,117 +1,403 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <title>Network Analytics — Enterprise Monitor</title>
 
-    <title>Network Analytics</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='style.css') }}"
-    >
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 
 <body>
 
-    <div class="header">
+<div class="app-shell">
 
-        <h1>Historical Analytics Dashboard</h1>
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
 
-        <p>
-            Monitoring History & Infrastructure Logs
-        </p>
+        <div class="sidebar-brand">
+            <div class="brand-icon">
+                <i class="fa-solid fa-network-wired"></i>
+            </div>
 
-        <a
-            href="/"
-            class="back-btn"
-        >
-            ← Back to Dashboard
-        </a>
+            <span class="brand-name">
+                Network Monitor
+            </span>
+        </div>
 
-    </div>
+        <nav class="sidebar-nav">
 
-    <div class="table-container">
+            <a href="/" class="nav-item">
+                <div class="nav-icon">
+                    <i class="fa-solid fa-gauge-high"></i>
+                </div>
+                <span>Dashboard</span>
+            </a>
 
-        <h2>Latest Monitoring Logs</h2>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">
+                    <i class="fa-solid fa-plus"></i>
+                </div>
+                <span>Add Device</span>
+            </a>
 
-        <table>
+            <a href="/analytics" class="nav-item active">
+                <div class="nav-icon">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <span>History / Analytics</span>
+            </a>
 
-            <thead>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">
+                    <i class="fa-solid fa-gear"></i>
+                </div>
+                <span>Settings</span>
+            </a>
 
-                <tr>
+        </nav>
 
-                    <th>Device</th>
-                    <th>IP Address</th>
-                    <th>Status</th>
-                    <th>Response Time</th>
-                    <th>Timestamp</th>
+        <div class="sidebar-footer">
 
-                </tr>
+            <div class="sys-status-card">
 
-            </thead>
+                <div class="sys-status-row">
+                    <span class="sys-label">System Status</span>
 
-            <tbody>
+                    <span class="sys-badge online">
+                        Online
+                    </span>
+                </div>
 
-                {% for row in history %}
+                <div class="sys-time" id="sidebarTime"></div>
 
-                <tr>
+            </div>
 
-                    <td>{{ row[1] }}</td>
+        </div>
 
-                    <td>{{ row[2] }}</td>
+    </aside>
 
-                    <td>
+    <!-- MAIN -->
+    <main class="main-area">
 
-                        {% if row[3] == "ONLINE" %}
+        <!-- TOPBAR -->
+        <header class="topbar">
 
-                            <span class="status-badge online-badge">
-                                ONLINE
-                            </span>
+            <div class="topbar-left">
 
-                        {% else %}
+                <button class="sidebar-toggle" onclick="toggleSidebar()">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
 
-                            <span class="status-badge offline-badge">
-                                OFFLINE
-                            </span>
+                <div class="topbar-title">
 
-                        {% endif %}
+                    <div class="title-row">
 
-                    </td>
+                        <h1>Historical Analytics</h1>
 
-                    <td>
+                        <div class="live-badge">
+                            <span class="live-dot"></span>
+                            LIVE
+                        </div>
 
-                        {% if row[3] == "ONLINE" %}
+                    </div>
 
-                            {{ row[4] }} ms
+                    <p>
+                        Monitoring history &amp; infrastructure logs
+                    </p>
 
-                        {% else %}
+                </div>
 
-                            Timeout
+            </div>
 
-                        {% endif %}
+            <div class="topbar-right">
 
-                    </td>
+                <a href="/" class="btn-analytics">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Back to Dashboard
+                </a>
 
-                    <td>{{ row[5] }}</td>
+                <div class="avatar-btn">
+                    <i class="fa-solid fa-user"></i>
+                    <span class="avatar-dot"></span>
+                </div>
 
-                </tr>
+            </div>
 
-                {% endfor %}
+        </header>
 
-            </tbody>
+        <!-- PAGE -->
+        <div class="page-content">
 
-        </table>
+            <!-- MINI STATS -->
+            <div class="analytics-stats-row">
 
-    </div>
+                <div class="analytics-mini-card">
+                    <span class="mini-label">Total Logs</span>
+                    <span class="mini-value">
+                        {{ history|length }}
+                    </span>
+                </div>
+
+                <div class="analytics-mini-card online">
+                    <span class="mini-label">Online Entries</span>
+
+                    <span class="mini-value">
+                        {{ history | selectattr(3, 'equalto', 'ONLINE') | list | length }}
+                    </span>
+                </div>
+
+                <div class="analytics-mini-card offline">
+                    <span class="mini-label">Offline Entries</span>
+
+                    <span class="mini-value">
+                        {{ history | rejectattr(3, 'equalto', 'ONLINE') | list | length }}
+                    </span>
+                </div>
+
+            </div>
+
+            <!-- ANALYTICS TABLE -->
+            <div class="analytics-card">
+
+                <div class="analytics-card-header">
+
+                    <div class="chart-title">
+                        <i class="fa-solid fa-server"></i>
+                        Latest Monitoring Logs
+                    </div>
+
+                    <div class="analytics-search">
+
+                        <i class="fa-solid fa-magnifying-glass"></i>
+
+                        <input
+                            type="text"
+                            id="tableSearch"
+                            placeholder="Filter logs..."
+                        >
+
+                    </div>
+
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table class="analytics-table" id="logsTable">
+
+                        <thead>
+
+                            <tr>
+                                <th>
+                                    <i class="fa-solid fa-desktop"></i>
+                                    Device
+                                </th>
+
+                                <th>
+                                    <i class="fa-solid fa-network-wired"></i>
+                                    IP Address
+                                </th>
+
+                                <th>
+                                    <i class="fa-solid fa-circle-dot"></i>
+                                    Status
+                                </th>
+
+                                <th>
+                                    <i class="fa-solid fa-stopwatch"></i>
+                                    Response
+                                </th>
+
+                                <th>
+                                    <i class="fa-solid fa-calendar"></i>
+                                    Timestamp
+                                </th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            {% for log in history %}
+
+                            <tr>
+
+                                <td class="td-name">
+                                    {{ log[1] }}
+                                </td>
+
+                                <td class="td-ip">
+                                    <span class="ip-chip">
+                                        {{ log[2] }}
+                                    </span>
+                                </td>
+
+                                <td>
+
+                                    {% if log[3] == "ONLINE" %}
+
+                                    <span class="status-badge badge-online">
+                                        <span class="badge-dot"></span>
+                                        ONLINE
+                                    </span>
+
+                                    {% else %}
+
+                                    <span class="status-badge badge-offline">
+                                        <span class="badge-dot"></span>
+                                        OFFLINE
+                                    </span>
+
+                                    {% endif %}
+
+                                </td>
+
+                                <td class="td-response">
+
+                                    {% if log[3] == "ONLINE" %}
+
+                                    <span class="response-val">
+                                        {{ log[4] }} ms
+                                    </span>
+
+                                    {% else %}
+
+                                    <span class="timeout-val">
+                                        Timeout
+                                    </span>
+
+                                    {% endif %}
+
+                                </td>
+
+                                <td class="td-time">
+                                    {{ log[5] }}
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                            {% if history|length == 0 %}
+
+                            <tr>
+
+                                <td colspan="5">
+
+                                    <div class="empty-state">
+
+                                        <i class="fa-solid fa-database"></i>
+
+                                        <h3>
+                                            No Monitoring Logs Yet
+                                        </h3>
+
+                                        <p>
+                                            Logs will appear here after monitoring begins.
+                                        </p>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                            {% endif %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="footer">
+
+            <div class="footer-left">
+
+                <span>
+                    Made By
+                    <strong class="footer-name">
+                        RISHIKESH &lt;/&gt;
+                    </strong>
+                </span>
+
+            </div>
+
+            <div class="footer-center">
+                Enterprise Network Monitoring System
+            </div>
+
+            <div class="footer-right">
+                © 2026 All rights reserved
+            </div>
+
+        </footer>
+
+    </main>
+
+</div>
+
+<!-- JAVASCRIPT -->
+<script>
+
+    // SIDEBAR CLOCK
+    function updateTime() {
+
+        const el = document.getElementById("sidebarTime");
+
+        if (el) {
+            el.textContent = new Date().toLocaleTimeString();
+        }
+
+    }
+
+    updateTime();
+
+    setInterval(updateTime, 1000);
+
+
+    // SIDEBAR TOGGLE
+    function toggleSidebar() {
+
+        document
+            .getElementById("sidebar")
+            .classList
+            .toggle("collapsed");
+
+    }
+
+
+    // TABLE SEARCH
+    document
+        .getElementById("tableSearch")
+        .addEventListener("keyup", function () {
+
+            const val = this.value.toLowerCase();
+
+            document
+                .querySelectorAll("#logsTable tbody tr")
+                .forEach(row => {
+
+                    row.style.display =
+                        row.textContent.toLowerCase().includes(val)
+                            ? ""
+                            : "none";
+
+                });
+
+        });
+
+</script>
 
 </body>
-
 </html>
