@@ -39,25 +39,11 @@
                 <span>Dashboard</span>
             </a>
 
-            <a href="#" class="nav-item">
-                <div class="nav-icon">
-                    <i class="fa-solid fa-plus"></i>
-                </div>
-                <span>Add Device</span>
-            </a>
-
             <a href="/analytics" class="nav-item active">
                 <div class="nav-icon">
                     <i class="fa-solid fa-clock-rotate-left"></i>
                 </div>
                 <span>History / Analytics</span>
-            </a>
-
-            <a href="#" class="nav-item">
-                <div class="nav-icon">
-                    <i class="fa-solid fa-gear"></i>
-                </div>
-                <span>Settings</span>
             </a>
 
         </nav>
@@ -96,19 +82,10 @@
 
                 <div class="topbar-title">
 
-                    <div class="title-row">
-
-                        <h1>Historical Analytics</h1>
-
-                        <div class="live-badge">
-                            <span class="live-dot"></span>
-                            LIVE
-                        </div>
-
-                    </div>
+                    <h1>Historical Analytics</h1>
 
                     <p>
-                        Monitoring history &amp; infrastructure logs
+                        Monitoring history & infrastructure logs
                     </p>
 
                 </div>
@@ -133,34 +110,6 @@
 
         <!-- PAGE -->
         <div class="page-content">
-
-            <!-- MINI STATS -->
-            <div class="analytics-stats-row">
-
-                <div class="analytics-mini-card">
-                    <span class="mini-label">Total Logs</span>
-                    <span class="mini-value">
-                        {{ history|length }}
-                    </span>
-                </div>
-
-                <div class="analytics-mini-card online">
-                    <span class="mini-label">Online Entries</span>
-
-                    <span class="mini-value">
-                        {{ history | selectattr(3, 'equalto', 'ONLINE') | list | length }}
-                    </span>
-                </div>
-
-                <div class="analytics-mini-card offline">
-                    <span class="mini-label">Offline Entries</span>
-
-                    <span class="mini-value">
-                        {{ history | rejectattr(3, 'equalto', 'ONLINE') | list | length }}
-                    </span>
-                </div>
-
-            </div>
 
             <!-- ANALYTICS TABLE -->
             <div class="analytics-card">
@@ -283,32 +232,6 @@
 
                             {% endfor %}
 
-                            {% if history|length == 0 %}
-
-                            <tr>
-
-                                <td colspan="5">
-
-                                    <div class="empty-state">
-
-                                        <i class="fa-solid fa-database"></i>
-
-                                        <h3>
-                                            No Monitoring Logs Yet
-                                        </h3>
-
-                                        <p>
-                                            Logs will appear here after monitoring begins.
-                                        </p>
-
-                                    </div>
-
-                                </td>
-
-                            </tr>
-
-                            {% endif %}
-
                         </tbody>
 
                     </table>
@@ -322,24 +245,16 @@
         <!-- FOOTER -->
         <footer class="footer">
 
-            <div class="footer-left">
+            <span>
+                Made By
+                <strong class="footer-name">
+                    RISHIKESH &lt;/&gt;
+                </strong>
+            </span>
 
-                <span>
-                    Made By
-                    <strong class="footer-name">
-                        RISHIKESH &lt;/&gt;
-                    </strong>
-                </span>
-
-            </div>
-
-            <div class="footer-center">
-                Enterprise Network Monitoring System
-            </div>
-
-            <div class="footer-right">
-                © 2026 All rights reserved
-            </div>
+            <span>
+                © 2026 Enterprise Network Monitor
+            </span>
 
         </footer>
 
