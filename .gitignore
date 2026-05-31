@@ -3,3 +3,9 @@ __pycache__/
 *.pyc
 network_monitor.db
 .env
+venv/
+__pycache__/
+*.pyc
+instance/
+logs/
+.env

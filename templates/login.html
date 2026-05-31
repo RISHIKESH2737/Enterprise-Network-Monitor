@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — Enterprise Network Monitor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body class="auth-body">
+
+<div class="auth-bg">
+    <div class="auth-bg-grid"></div>
+    <div class="auth-bg-glow glow-blue"></div>
+    <div class="auth-bg-glow glow-purple"></div>
+</div>
+
+<div class="auth-shell">
+
+    <!-- BRAND -->
+    <div class="auth-brand">
+        <div class="auth-brand-icon">
+            <i class="fa-solid fa-network-wired"></i>
+        </div>
+        <div>
+            <div class="auth-brand-name">Network Monitor</div>
+            <div class="auth-brand-sub">Enterprise Infrastructure</div>
+        </div>
+    </div>
+
+    <!-- CARD -->
+    <div class="auth-card">
+
+        <div class="auth-card-header">
+            <h1>Welcome back</h1>
+            <p>Sign in to your dashboard</p>
+        </div>
+
+        <!-- FLASH MESSAGES -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="flash-msg flash-{{ category }}">
+                    <i class="fa-solid {% if category == 'success' %}fa-circle-check{% elif category == 'error' %}fa-circle-xmark{% else %}fa-circle-info{% endif %}"></i>
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="/login" class="auth-form">
+
+            <div class="auth-field">
+                <label><i class="fa-solid fa-user"></i> Username</label>
+                <input
+                    type="text"
+                    name="username"
+                    placeholder="Enter your username"
+                    required
+                    autocomplete="username"
+                >
+            </div>
+
+            <div class="auth-field">
+                <label><i class="fa-solid fa-lock"></i> Password</label>
+                <div class="password-wrap">
+                    <input
+                        type="password"
+                        name="password"
+                        id="passwordInput"
+                        placeholder="Enter your password"
+                        required
+                        autocomplete="current-password"
+                    >
+                    <button type="button" class="toggle-pass" onclick="togglePassword()">
+                        <i class="fa-solid fa-eye" id="eyeIcon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="auth-row">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="remember">
+                    <span class="checkbox-custom"></span>
+                    Remember me
+                </label>
+            </div>
+
+            <button type="submit" class="auth-submit-btn">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                Sign In
+            </button>
+
+        </form>
+
+        <div class="auth-footer-text">
+            Don't have an account?
+            <a href="/register">Create account</a>
+        </div>
+
+    </div>
+
+    <div class="auth-bottom-text">
+        © 2026 Enterprise Network Monitor &nbsp;·&nbsp;
+        Made by <span class="auth-name">RISHIKESH &lt;/&gt;</span>
+    </div>
+
+</div>
+
+<script>
+    function togglePassword() {
+        const input = document.getElementById("passwordInput");
+        const icon  = document.getElementById("eyeIcon");
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.replace("fa-eye", "fa-eye-slash");
+        } else {
+            input.type = "password";
+            icon.classList.replace("fa-eye-slash", "fa-eye");
+        }
+    }
+</script>
+
+</body>
+</html>

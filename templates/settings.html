@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon"><i class="fa-solid fa-network-wired"></i></div>
+            <span class="brand-name">Network Monitor</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/" class="nav-item">
+                <div class="nav-icon"><i class="fa-solid fa-gauge-high"></i></div>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" onclick="event.preventDefault()">
+                <div class="nav-icon"><i class="fa-solid fa-plus"></i></div>
+                <span>Add Device</span>
+            </a>
+            <a href="/analytics" class="nav-item">
+                <div class="nav-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                <span>History / Analytics</span>
+            </a>
+            <a href="/settings" class="nav-item active">
+                <div class="nav-icon"><i class="fa-solid fa-gear"></i></div>
+                <span>Settings</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sys-status-card">
+                <div class="sys-status-row">
+                    <span class="sys-label">System Status</span>
+                    <span class="sys-badge online">Online</span>
+                </div>
+                <div class="sys-time" id="sidebarTime"></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main-area">
+
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="sidebar-toggle" onclick="toggleSidebar()">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div class="topbar-title">
+                    <h1>Settings</h1>
+                    <p>Manage alerts, account & preferences</p>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <span class="topbar-user">
+                    <i class="fa-solid fa-user-shield"></i>
+                    {{ username }}
+                    <span class="role-badge role-{{ user_role }}">{{ user_role }}</span>
+                </span>
+                <a href="/logout" class="btn-logout">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    Logout
+                </a>
+            </div>
+        </header>
+
+        <div class="page-content">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="flash-msg flash-{{ category }}">
+                        <i class="fa-solid {% if category == 'success' %}fa-circle-check{% elif category == 'error' %}fa-circle-xmark{% else %}fa-circle-info{% endif %}"></i>
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="settings-grid">
+
+                <!-- EMAIL ALERTS CARD -->
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <div class="settings-card-title">
+                            <div class="settings-icon" style="background:var(--yellow-bg);color:var(--yellow);">
+                                <i class="fa-solid fa-bell"></i>
+                            </div>
+                            <div>
+                                <h2>Email Alerts</h2>
+                                <p>Get notified when a device goes offline</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="/settings" class="settings-form">
+                        <input type="hidden" name="form_type" value="email_alerts">
+
+                        <div class="toggle-field">
+                            <div class="toggle-label">
+                                <span class="toggle-title">Enable Email Alerts</span>
+                                <span class="toggle-desc">Send email when a device goes offline</span>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" name="email_alerts" id="emailAlertsToggle"
+                                    {% if alert_cfg.email_alerts %}checked{% endif %}>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="settings-field" id="alertEmailField" style="display:none;">
+                            <label><i class="fa-solid fa-envelope"></i> Alert Email Address</label>
+                            <input
+                                type="email"
+                                name="alert_email"
+                                value="{{ alert_cfg.alert_email or '' }}"
+                                placeholder="alerts@youremail.com"
+                            >
+                            <span class="field-hint">Alerts are sent here when a monitored device goes offline.</span>
+                        </div>
+
+                        <div class="settings-info-box">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <div>
+                                <strong>SMTP Setup Required</strong><br>
+                                Set <code>SMTP_USER</code> and <code>SMTP_PASS</code> environment
+                                variables to your Gmail address and App Password.
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-submit">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            Save Alert Settings
+                        </button>
+                    </form>
+                </div>
+
+                <!-- ACCOUNT CARD -->
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <div class="settings-card-title">
+                            <div class="settings-icon" style="background:var(--blue-bg);color:var(--blue);">
+                                <i class="fa-solid fa-user-gear"></i>
+                            </div>
+                            <div>
+                                <h2>Account</h2>
+                                <p>Your account information</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="account-info">
+                        <div class="account-row">
+                            <span class="account-label">Username</span>
+                            <span class="account-val">{{ username }}</span>
+                        </div>
+                        <div class="account-row">
+                            <span class="account-label">Role</span>
+                            <span class="role-badge role-{{ user_role }}">{{ user_role }}</span>
+                        </div>
+                        <div class="account-row">
+                            <span class="account-label">Alert Email</span>
+                            <span class="account-val" style="font-size:13px;color:var(--muted);">
+                                {{ alert_cfg.alert_email or '—' }}
+                            </span>
+                        </div>
+                        <div class="account-row">
+                            <span class="account-label">Alerts Active</span>
+                            <span style="font-size:12px;font-weight:600;padding:3px 9px;border-radius:99px;
+                                {% if alert_cfg.email_alerts %}background:var(--green-bg);color:var(--green);{% else %}background:var(--surface3);color:var(--muted);{% endif %}">
+                                {{ 'Enabled' if alert_cfg.email_alerts else 'Disabled' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="settings-divider"></div>
+
+                    <a href="/logout" class="btn-logout-full">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        Sign Out
+                    </a>
+                </div>
+
+                <!-- CHANGE PASSWORD CARD -->
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <div class="settings-card-title">
+                            <div class="settings-icon" style="background:var(--green-bg);color:var(--green);">
+                                <i class="fa-solid fa-lock"></i>
+                            </div>
+                            <div>
+                                <h2>Change Password</h2>
+                                <p>Update your account password</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="/settings" class="settings-form">
+                        <input type="hidden" name="form_type" value="change_password">
+
+                        <div class="settings-field">
+                            <label><i class="fa-solid fa-lock"></i> Current Password</label>
+                            <input type="password" name="current_password" placeholder="Enter current password">
+                        </div>
+                        <div class="settings-field">
+                            <label><i class="fa-solid fa-lock"></i> New Password</label>
+                            <input type="password" name="new_password" placeholder="Min. 6 characters">
+                        </div>
+                        <div class="settings-field">
+                            <label><i class="fa-solid fa-lock"></i> Confirm New Password</label>
+                            <input type="password" name="confirm_password" placeholder="Repeat new password">
+                        </div>
+                        <button type="submit" class="btn-submit" style="background:var(--green);">
+                            <i class="fa-solid fa-key"></i>
+                            Update Password
+                        </button>
+                    </form>
+                </div>
+
+                <!-- REST API CARD -->
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <div class="settings-card-title">
+                            <div class="settings-icon" style="background:var(--purple-bg);color:var(--purple);">
+                                <i class="fa-solid fa-code"></i>
+                            </div>
+                            <div>
+                                <h2>REST API</h2>
+                                <p>Available JSON endpoints</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="api-endpoints">
+                        <div class="api-row">
+                            <span class="api-method get">GET</span>
+                            <code class="api-path">/api/status</code>
+                            <span class="api-desc">Current scan results for all devices</span>
+                        </div>
+                        <div class="api-row">
+                            <span class="api-method get">GET</span>
+                            <code class="api-path">/api/devices</code>
+                            <span class="api-desc">List of configured devices</span>
+                        </div>
+                        <div class="api-row">
+                            <span class="api-method get">GET</span>
+                            <code class="api-path">/api/uptime</code>
+                            <span class="api-desc">Per-device uptime % and response stats</span>
+                        </div>
+                    </div>
+
+                    <div class="settings-info-box" style="margin-top:16px;">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>All API endpoints require an active login session.</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <footer class="footer">
+            <span>Made By <strong class="footer-name">RISHIKESH &lt;/&gt;</strong></span>
+            <span>© 2026 Enterprise Network Monitor. All rights reserved.</span>
+        </footer>
+
+    </main>
+</div>
+
+<script>
+    function updateTime() {
+        const el = document.getElementById("sidebarTime");
+        if (el) el.textContent = new Date().toLocaleTimeString();
+    }
+    updateTime();
+    setInterval(updateTime, 1000);
+
+    function toggleSidebar() {
+        const sb = document.getElementById("sidebar");
+        sb.classList.toggle("collapsed");
+        document.querySelector(".main-area").style.marginLeft =
+            sb.classList.contains("collapsed") ? "0" : "var(--sidebar-w)";
+    }
+
+    const toggle = document.getElementById("emailAlertsToggle");
+    const field  = document.getElementById("alertEmailField");
+
+    function updateField() {
+        field.style.display = toggle.checked ? "flex" : "none";
+    }
+
+    toggle.addEventListener("change", updateField);
+    updateField();
+</script>
+{% endblock %}

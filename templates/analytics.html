@@ -1,318 +1,157 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% extends "base.html" %}
 
-    <title>Network Analytics — Enterprise Monitor</title>
+{% block title %}Analytics{% endblock %}
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-</head>
-
-<body>
-
+{% block content %}
 <div class="app-shell">
 
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
-
         <div class="sidebar-brand">
-            <div class="brand-icon">
-                <i class="fa-solid fa-network-wired"></i>
-            </div>
-
-            <span class="brand-name">
-                Network Monitor
-            </span>
+            <div class="brand-icon"><i class="fa-solid fa-network-wired"></i></div>
+            <span class="brand-name">Network Monitor</span>
         </div>
-
         <nav class="sidebar-nav">
-
             <a href="/" class="nav-item">
-                <div class="nav-icon">
-                    <i class="fa-solid fa-gauge-high"></i>
-                </div>
+                <div class="nav-icon"><i class="fa-solid fa-gauge-high"></i></div>
                 <span>Dashboard</span>
             </a>
-
             <a href="/analytics" class="nav-item active">
-                <div class="nav-icon">
-                    <i class="fa-solid fa-clock-rotate-left"></i>
-                </div>
+                <div class="nav-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
                 <span>History / Analytics</span>
             </a>
-
+            <a href="/settings" class="nav-item">
+                <div class="nav-icon"><i class="fa-solid fa-gear"></i></div>
+                <span>Settings</span>
+            </a>
         </nav>
-
         <div class="sidebar-footer">
-
             <div class="sys-status-card">
-
                 <div class="sys-status-row">
                     <span class="sys-label">System Status</span>
-
-                    <span class="sys-badge online">
-                        Online
-                    </span>
+                    <span class="sys-badge online">Online</span>
                 </div>
-
                 <div class="sys-time" id="sidebarTime"></div>
-
             </div>
-
         </div>
-
     </aside>
 
     <!-- MAIN -->
     <main class="main-area">
 
-        <!-- TOPBAR -->
         <header class="topbar">
-
             <div class="topbar-left">
-
                 <button class="sidebar-toggle" onclick="toggleSidebar()">
                     <i class="fa-solid fa-bars"></i>
                 </button>
-
                 <div class="topbar-title">
-
                     <h1>Historical Analytics</h1>
-
-                    <p>
-                        Monitoring history & infrastructure logs
-                    </p>
-
+                    <p>Monitoring history & infrastructure logs</p>
                 </div>
-
             </div>
-
             <div class="topbar-right">
-
-                <a href="/" class="btn-analytics">
+                <a href="/" class="btn-back">
                     <i class="fa-solid fa-arrow-left"></i>
                     Back to Dashboard
                 </a>
-
-                <div class="avatar-btn">
-                    <i class="fa-solid fa-user"></i>
-                    <span class="avatar-dot"></span>
-                </div>
-
             </div>
-
         </header>
 
-        <!-- PAGE -->
         <div class="page-content">
 
-            <!-- ANALYTICS TABLE -->
             <div class="analytics-card">
-
                 <div class="analytics-card-header">
-
                     <div class="chart-title">
                         <i class="fa-solid fa-server"></i>
                         Latest Monitoring Logs
                     </div>
-
                     <div class="analytics-search">
-
                         <i class="fa-solid fa-magnifying-glass"></i>
-
-                        <input
-                            type="text"
-                            id="tableSearch"
-                            placeholder="Filter logs..."
-                        >
-
+                        <input type="text" id="tableSearch" placeholder="Filter logs...">
                     </div>
-
                 </div>
 
                 <div class="table-wrapper">
-
                     <table class="analytics-table" id="logsTable">
-
                         <thead>
-
                             <tr>
-                                <th>
-                                    <i class="fa-solid fa-desktop"></i>
-                                    Device
-                                </th>
-
-                                <th>
-                                    <i class="fa-solid fa-network-wired"></i>
-                                    IP Address
-                                </th>
-
-                                <th>
-                                    <i class="fa-solid fa-circle-dot"></i>
-                                    Status
-                                </th>
-
-                                <th>
-                                    <i class="fa-solid fa-stopwatch"></i>
-                                    Response
-                                </th>
-
-                                <th>
-                                    <i class="fa-solid fa-calendar"></i>
-                                    Timestamp
-                                </th>
+                                <th><i class="fa-solid fa-desktop"></i> Device</th>
+                                <th><i class="fa-solid fa-network-wired"></i> IP Address</th>
+                                <th><i class="fa-solid fa-circle-dot"></i> Status</th>
+                                <th><i class="fa-solid fa-stopwatch"></i> Response</th>
+                                <th><i class="fa-solid fa-calendar"></i> Timestamp</th>
                             </tr>
-
                         </thead>
-
                         <tbody>
-
                             {% for log in history %}
-
                             <tr>
-
-                                <td class="td-name">
-                                    {{ log[1] }}
-                                </td>
-
-                                <td class="td-ip">
-                                    <span class="ip-chip">
-                                        {{ log[2] }}
-                                    </span>
-                                </td>
-
+                                <td class="td-name">{{ log[1] }}</td>
+                                <td class="td-ip"><span class="ip-chip">{{ log[2] }}</span></td>
                                 <td>
-
                                     {% if log[3] == "ONLINE" %}
-
                                     <span class="status-badge badge-online">
-                                        <span class="badge-dot"></span>
-                                        ONLINE
+                                        <span class="badge-dot"></span>ONLINE
                                     </span>
-
                                     {% else %}
-
                                     <span class="status-badge badge-offline">
-                                        <span class="badge-dot"></span>
-                                        OFFLINE
+                                        <span class="badge-dot"></span>OFFLINE
                                     </span>
-
                                     {% endif %}
-
                                 </td>
-
-                                <td class="td-response">
-
+                                <td>
                                     {% if log[3] == "ONLINE" %}
-
-                                    <span class="response-val">
-                                        {{ log[4] }} ms
-                                    </span>
-
+                                    <span class="response-val">{{ log[4] }} ms</span>
                                     {% else %}
-
-                                    <span class="timeout-val">
-                                        Timeout
-                                    </span>
-
+                                    <span class="timeout-val">Timeout</span>
                                     {% endif %}
-
                                 </td>
-
-                                <td class="td-time">
-                                    {{ log[5] }}
-                                </td>
-
+                                <td class="td-time">{{ log[5] }}</td>
                             </tr>
-
+                            {% else %}
+                            <tr>
+                                <td colspan="5">
+                                    <div class="table-empty">
+                                        <i class="fa-solid fa-inbox"></i>
+                                        <p>No monitoring logs yet. Logs will appear after the first scan cycle.</p>
+                                    </div>
+                                </td>
+                            </tr>
                             {% endfor %}
-
                         </tbody>
-
                     </table>
-
                 </div>
-
             </div>
 
         </div>
 
-        <!-- FOOTER -->
         <footer class="footer">
-
-            <span>
-                Made By
-                <strong class="footer-name">
-                    RISHIKESH &lt;/&gt;
-                </strong>
-            </span>
-
-            <span>
-                © 2026 Enterprise Network Monitor
-            </span>
-
+            <span>Made By <strong class="footer-name">RISHIKESH &lt;/&gt;</strong></span>
+            <span>© 2026 Enterprise Network Monitor. All rights reserved.</span>
         </footer>
 
     </main>
-
 </div>
 
-<!-- JAVASCRIPT -->
 <script>
-
-    // SIDEBAR CLOCK
     function updateTime() {
-
         const el = document.getElementById("sidebarTime");
-
-        if (el) {
-            el.textContent = new Date().toLocaleTimeString();
-        }
-
+        if (el) el.textContent = new Date().toLocaleTimeString();
     }
-
     updateTime();
-
     setInterval(updateTime, 1000);
 
-
-    // SIDEBAR TOGGLE
     function toggleSidebar() {
-
-        document
-            .getElementById("sidebar")
-            .classList
-            .toggle("collapsed");
-
+        const sb = document.getElementById("sidebar");
+        sb.classList.toggle("collapsed");
+        document.querySelector(".main-area").style.marginLeft =
+            sb.classList.contains("collapsed") ? "0" : "var(--sidebar-w)";
     }
 
-
-    // TABLE SEARCH
-    document
-        .getElementById("tableSearch")
-        .addEventListener("keyup", function () {
-
-            const val = this.value.toLowerCase();
-
-            document
-                .querySelectorAll("#logsTable tbody tr")
-                .forEach(row => {
-
-                    row.style.display =
-                        row.textContent.toLowerCase().includes(val)
-                            ? ""
-                            : "none";
-
-                });
-
+    document.getElementById("tableSearch").addEventListener("keyup", function() {
+        const val = this.value.toLowerCase();
+        document.querySelectorAll("#logsTable tbody tr").forEach(row => {
+            row.style.display = row.textContent.toLowerCase().includes(val) ? "" : "none";
         });
-
+    });
 </script>
-
-</body>
-</html>
+{% endblock %}
