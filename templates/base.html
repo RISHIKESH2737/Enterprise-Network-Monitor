@@ -1,27 +1,33 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="background:#0b1220;">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{% endblock %} — Network Monitor</title>
 
-<title>{% block title %}{% endblock %}</title>
+    <!--
+        background on <html> above prevents the white/grey flash before
+        CSS loads. Must match --bg in style.css exactly.
+    -->
+    <style>
+        /* Inline critical styles so there's zero flash */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { background: #0b1220; color: #f1f5f9; }
+    </style>
 
-<link rel="stylesheet"
-href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+          crossorigin="anonymous" referrerpolicy="no-referrer">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+          rel="stylesheet">
 </head>
-
 <body>
 
-{% block content %}
-{% endblock %}
+{% block content %}{% endblock %}
 
 </body>
 </html>

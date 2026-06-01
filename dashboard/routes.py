@@ -1,54 +1,48 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, Response
 from flask_login import login_required, current_user
-from dashboard.monitor import scan_devices
-from database.db import db
-import json, os
+from dashboard.monitor import ping_device, load_devices, save_devices
+from datetime import datetime
+import csv, io
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
-# Path for persisting devices (use a simple JSON file or swap for DB)
-DEVICES_FILE = os.path.join(os.path.dirname(__file__), "devices.json")
 
-
-def load_devices():
-    if os.path.exists(DEVICES_FILE):
-        with open(DEVICES_FILE) as f:
-            return json.load(f)
-    # Defaults
-    return [
-        {"name": "Google DNS",     "ip": "8.8.8.8"},
-        {"name": "Cloudflare DNS", "ip": "1.1.1.1"},
-        {"name": "Local Router",   "ip": "192.168.1.1"},
-    ]
-
-
-def save_devices(devices):
-    with open(DEVICES_FILE, "w") as f:
-        json.dump(devices, f, indent=2)
+def _get_uptime(device_name, ip, days=7):
+    """Return uptime % for a device over the last N days."""
+    try:
+        from database.models import PingLog
+        from sqlalchemy import func
+        total  = PingLog.query.filter_by(ip=ip).count()
+        online = PingLog.query.filter_by(ip=ip, status="ONLINE").count()
+        if total == 0:
+            return None
+        return round((online / total) * 100, 1)
+    except Exception:
+        return None
 
 
 @dashboard_bp.route("/")
 @login_required
 def dashboard():
-    from dashboard.monitor import ping_device
-    from datetime import datetime
-
     devices = load_devices()
     results = []
+
     for d in devices:
-        status = ping_device(d["ip"])
+        status, response_time = ping_device(d["ip"])
         results.append({
-            "name": d["name"],
-            "ip":   d["ip"],
-            "status": status,
-            "response_time": 12 if status == "ONLINE" else 0,
-            "timestamp": datetime.now().strftime("%H:%M:%S"),
+            "name":          d["name"],
+            "ip":            d["ip"],
+            "status":        status,
+            "response_time": response_time if response_time is not None else 0,
+            "timestamp":     datetime.now().strftime("%H:%M:%S"),
+            "uptime":        _get_uptime(d["name"], d["ip"]),
         })
 
     total_devices   = len(results)
     online_devices  = sum(1 for d in results if d["status"] == "ONLINE")
     offline_devices = total_devices - online_devices
-    online_times    = [d["response_time"] for d in results if d["status"] == "ONLINE"]
+    online_times    = [d["response_time"] for d in results
+                       if d["status"] == "ONLINE" and d["response_time"]]
     avg_response    = round(sum(online_times) / len(online_times)) if online_times else 0
 
     return render_template(
@@ -74,57 +68,101 @@ def add_device():
         return redirect(url_for("dashboard.dashboard"))
 
     devices = load_devices()
-
-    # Check for duplicate IP
     if any(d["ip"] == ip for d in devices):
         flash(f"A device with IP {ip} already exists.", "error")
         return redirect(url_for("dashboard.dashboard"))
 
     devices.append({"name": name, "ip": ip})
     save_devices(devices)
-
     flash(f"Device '{name}' added successfully.", "success")
+    return redirect(url_for("dashboard.dashboard"))
+
+
+@dashboard_bp.route("/delete_device", methods=["POST"])
+@login_required
+def delete_device():
+    ip = request.form.get("ip", "").strip()
+    if not ip:
+        flash("No IP provided.", "error")
+        return redirect(url_for("dashboard.dashboard"))
+
+    devices = load_devices()
+    new_devices = [d for d in devices if d["ip"] != ip]
+
+    if len(new_devices) == len(devices):
+        flash("Device not found.", "error")
+    else:
+        save_devices(new_devices)
+        flash("Device removed.", "success")
+
     return redirect(url_for("dashboard.dashboard"))
 
 
 @dashboard_bp.route("/analytics")
 @login_required
 def analytics():
-    # Fetch history from DB if you have a PingLog model,
-    # otherwise pass empty list (replace with real query)
     history = []
     try:
         from database.models import PingLog
-        history = PingLog.query.order_by(PingLog.id.desc()).limit(200).all()
-        history = [(r.id, r.device_name, r.ip, r.status, r.response_time, r.timestamp)
-                   for r in history]
+        rows = PingLog.query.order_by(PingLog.id.desc()).limit(500).all()
+        history = [
+            (r.id, r.device_name, r.ip, r.status, r.response_time, r.timestamp)
+            for r in rows
+        ]
     except Exception:
         pass
 
     return render_template(
         "analytics.html",
         history=history,
-        username=getattr(current_user, "username", ""),
-        user_role=getattr(current_user, "role", "viewer"),
+        username=current_user.username,
+        user_role=current_user.role,
     )
 
 
-# ---- REST API ----
+@dashboard_bp.route("/export_csv")
+@login_required
+def export_csv():
+    """Download all ping logs as a CSV file."""
+    try:
+        from database.models import PingLog
+        rows = PingLog.query.order_by(PingLog.id.desc()).all()
+    except Exception:
+        rows = []
+
+    def generate():
+        buf = io.StringIO()
+        writer = csv.writer(buf)
+        writer.writerow(["ID", "Device", "IP", "Status", "Response (ms)", "Timestamp"])
+        for r in rows:
+            writer.writerow([r.id, r.device_name, r.ip, r.status,
+                             r.response_time or "", r.timestamp])
+            yield buf.getvalue()
+            buf.seek(0)
+            buf.truncate(0)
+
+    filename = f"network_logs_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    return Response(
+        generate(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+
+# ── REST API ──────────────────────────────────────────────
 
 @dashboard_bp.route("/api/status")
 @login_required
 def api_status():
-    from dashboard.monitor import ping_device
-    from datetime import datetime
     devices = load_devices()
     results = []
     for d in devices:
-        status = ping_device(d["ip"])
+        status, response_time = ping_device(d["ip"])
         results.append({
             "name":          d["name"],
             "ip":            d["ip"],
             "status":        status,
-            "response_time": 12 if status == "ONLINE" else None,
+            "response_time": response_time,
             "timestamp":     datetime.now().isoformat(),
         })
     return jsonify(results)
@@ -139,15 +177,15 @@ def api_devices():
 @dashboard_bp.route("/api/uptime")
 @login_required
 def api_uptime():
-    from dashboard.monitor import ping_device
     devices = load_devices()
     results = []
     for d in devices:
-        status = ping_device(d["ip"])
+        status, _ = ping_device(d["ip"])
         results.append({
             "name":   d["name"],
             "ip":     d["ip"],
             "online": status == "ONLINE",
+            "uptime": _get_uptime(d["name"], d["ip"]),
         })
     online = sum(1 for r in results if r["online"])
     pct    = round((online / len(results)) * 100) if results else 0
