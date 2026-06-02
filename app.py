@@ -8,7 +8,7 @@ from flask_login import LoginManager
 from auth.models import User
 import os
 
-socketio   = SocketIO(async_mode="threading", cors_allowed_origins="*")
+socketio      = SocketIO(async_mode="threading", cors_allowed_origins="*")
 login_manager = LoginManager()
 login_manager.login_view = "auth.login"
 login_manager.login_message = "Please log in to access this page."
@@ -31,12 +31,17 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
     socketio.init_app(app)
-    
+
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(settings_bp)
 
+    # FIX: create all tables FIRST, then start scanner
     init_db(app)
+
+    # Start scanner only after tables exist
+    from scanner import start_scanner
+    start_scanner(app, socketio)
 
     return app
 
@@ -47,11 +52,6 @@ def load_user(user_id):
 
 
 app = create_app()
-
-# Start background scanner AFTER app is created
-from scanner import start_scanner
-start_scanner(app, socketio)
-
 
 if __name__ == "__main__":
     socketio.run(app, debug=True)

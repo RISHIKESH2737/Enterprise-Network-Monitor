@@ -1721,3 +1721,179 @@ body.auth-body {
     .stats-grid { grid-template-columns: 1fr; }
     .auth-card { padding: 24px 20px; }
 }
+
+/* =============================================
+   LIVE BADGE (topbar)
+   ============================================= */
+
+.live-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 5px 11px;
+    border-radius: 99px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted2);
+    transition: all var(--transition);
+    cursor: default;
+}
+
+.live-badge.connected {
+    background: var(--green-bg);
+    border-color: rgba(34,197,94,0.25);
+    color: var(--green);
+}
+
+.live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--muted2);
+    transition: background var(--transition);
+}
+
+.live-badge.connected .live-dot {
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    animation: pulse-green 1.5s infinite;
+}
+
+.live-text { font-size: 11px; }
+
+/* =============================================
+   DELETE DEVICE BUTTON
+   ============================================= */
+
+.btn-delete-device {
+    background: none;
+    border: 1px solid transparent;
+    color: var(--muted2);
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    transition: all var(--transition);
+    cursor: pointer;
+}
+
+.btn-delete-device:hover {
+    background: var(--red-bg);
+    border-color: rgba(239,68,68,0.25);
+    color: var(--red);
+}
+
+/* =============================================
+   LAST SCAN LABEL
+   ============================================= */
+
+.last-scan-label {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--muted2);
+    margin-left: 4px;
+}
+
+/* =============================================
+   EXPORT CSV BUTTON
+   ============================================= */
+
+.btn-export {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--green);
+    background: var(--green-bg);
+    border: 1px solid rgba(34,197,94,0.25);
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition);
+}
+
+.btn-export:hover {
+    background: rgba(34,197,94,0.15);
+    border-color: rgba(34,197,94,0.4);
+}
+
+/* =============================================
+   STAT VALUE COLOR CLASSES  (replaces Jinja inline style)
+   ============================================= */
+.stat-green { color: var(--green); }
+.stat-red   { color: var(--red); }
+.stat-unit  { font-size: 18px; font-weight: 500; color: var(--muted); }
+
+/* =============================================
+   UPTIME COLOR CLASSES  (replaces Jinja inline style)
+   ============================================= */
+.uptime-good { color: var(--green); }
+.uptime-warn { color: var(--yellow); }
+.uptime-none { color: var(--muted2); }
+
+/* =============================================
+   CHART CANVAS WRAPPER  (fixes chart sliding down)
+   ============================================= */
+.chart-canvas-wrap {
+    position: relative;
+    height: 200px;   /* fixed height — chart never shifts layout */
+    width: 100%;
+}
+
+/* =============================================
+   DEVICES EMPTY STATE  (replaces inline style blob)
+   ============================================= */
+.devices-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+}
+.devices-empty i {
+    font-size: 32px;
+    opacity: 0.3;
+    display: block;
+    margin-bottom: 12px;
+}
+.devices-empty p { font-size: 14px; }
+
+/* =============================================
+   DEVICE GRID — scales from 3 to 20+ devices
+   ============================================= */
+.device-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 14px;
+}
+
+/* Tighter cards for large fleets */
+.device-card {
+    padding: 16px;
+}
+
+/* =============================================
+   CHART CANVAS WRAP — guaranteed height so
+   chart never collapses or slides down
+   ============================================= */
+.chart-canvas-wrap {
+    position: relative;
+    height: 220px;
+    width: 100%;
+    min-height: 220px;
+}
+
+/* When many devices: let bar chart scroll horizontally */
+@media (min-width: 900px) {
+    .chart-canvas-wrap.scrollable {
+        overflow-x: auto;
+    }
+}

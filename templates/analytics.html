@@ -1,11 +1,9 @@
 {% extends "base.html" %}
-
 {% block title %}Analytics{% endblock %}
 
 {% block content %}
 <div class="app-shell">
 
-    <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
             <div class="brand-icon"><i class="fa-solid fa-network-wired"></i></div>
@@ -36,7 +34,6 @@
         </div>
     </aside>
 
-    <!-- MAIN -->
     <main class="main-area">
 
         <header class="topbar">
@@ -50,9 +47,13 @@
                 </div>
             </div>
             <div class="topbar-right">
+                <a href="/export_csv" class="btn-export">
+                    <i class="fa-solid fa-file-csv"></i>
+                    Export CSV
+                </a>
                 <a href="/" class="btn-back">
                     <i class="fa-solid fa-arrow-left"></i>
-                    Back to Dashboard
+                    Dashboard
                 </a>
             </div>
         </header>
@@ -64,6 +65,9 @@
                     <div class="chart-title">
                         <i class="fa-solid fa-server"></i>
                         Latest Monitoring Logs
+                        <span style="font-size:13px;font-weight:400;color:var(--muted);margin-left:6px;">
+                            (last 500 records)
+                        </span>
                     </div>
                     <div class="analytics-search">
                         <i class="fa-solid fa-magnifying-glass"></i>
@@ -112,7 +116,8 @@
                                 <td colspan="5">
                                     <div class="table-empty">
                                         <i class="fa-solid fa-inbox"></i>
-                                        <p>No monitoring logs yet. Logs will appear after the first scan cycle.</p>
+                                        <p>No logs yet — the background scanner runs every 60 seconds.<br>
+                                           Check back shortly.</p>
                                     </div>
                                 </td>
                             </tr>

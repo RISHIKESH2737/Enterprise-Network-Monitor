@@ -1,11 +1,9 @@
 {% extends "base.html" %}
-
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
 <div class="app-shell">
 
-    <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
             <div class="brand-icon"><i class="fa-solid fa-network-wired"></i></div>
@@ -40,10 +38,8 @@
         </div>
     </aside>
 
-    <!-- MAIN AREA -->
     <main class="main-area">
 
-        <!-- TOPBAR -->
         <header class="topbar">
             <div class="topbar-left">
                 <button class="sidebar-toggle" onclick="toggleSidebar()">
@@ -55,6 +51,10 @@
                 </div>
             </div>
             <div class="topbar-right">
+                <div class="live-badge" id="liveBadge">
+                    <span class="live-dot"></span>
+                    <span class="live-text">LIVE</span>
+                </div>
                 <span class="topbar-user">
                     <i class="fa-solid fa-user-shield"></i>
                     {{ username }}
@@ -67,24 +67,19 @@
             </div>
         </header>
 
-        <!-- PAGE CONTENT -->
         <div class="page-content">
 
-            <!-- FLASH MESSAGES -->
             {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                    <div class="flash-msg flash-{{ category }}">
-                        <i class="fa-solid {% if category == 'success' %}fa-circle-check{% elif category == 'error' %}fa-circle-xmark{% else %}fa-circle-info{% endif %}"></i>
-                        {{ message }}
-                    </div>
-                    {% endfor %}
-                {% endif %}
+                {% if messages %}{% for category, message in messages %}
+                <div class="flash-msg flash-{{ category }}">
+                    <i class="fa-solid {% if category == 'success' %}fa-circle-check{% elif category == 'error' %}fa-circle-xmark{% else %}fa-circle-info{% endif %}"></i>
+                    {{ message }}
+                </div>
+                {% endfor %}{% endif %}
             {% endwith %}
 
-            <!-- STATS GRID -->
+            <!-- STATS -->
             <div class="stats-grid">
-
                 <div class="stat-card">
                     <div class="stat-card-header">
                         <span class="stat-label">Total Devices</span>
@@ -92,10 +87,9 @@
                             <i class="fa-solid fa-server"></i>
                         </div>
                     </div>
-                    <div class="stat-value">{{ total_devices }}</div>
+                    <div class="stat-value" id="stat-total">{{ total_devices }}</div>
                     <div class="stat-sub">Monitored hosts</div>
                 </div>
-
                 <div class="stat-card">
                     <div class="stat-card-header">
                         <span class="stat-label">Online</span>
@@ -103,10 +97,9 @@
                             <i class="fa-solid fa-circle-check"></i>
                         </div>
                     </div>
-                    <div class="stat-value" style="color:var(--green);">{{ online_devices }}</div>
+                    <div class="stat-value stat-green" id="stat-online">{{ online_devices }}</div>
                     <div class="stat-sub">Reachable now</div>
                 </div>
-
                 <div class="stat-card">
                     <div class="stat-card-header">
                         <span class="stat-label">Offline</span>
@@ -114,10 +107,11 @@
                             <i class="fa-solid fa-circle-xmark"></i>
                         </div>
                     </div>
-                    <div class="stat-value" style="color:{{ 'var(--red)' if offline_devices > 0 else 'var(--text)' }};">{{ offline_devices }}</div>
+                    <div class="stat-value {% if offline_devices > 0 %}stat-red{% endif %}" id="stat-offline">
+                        {{ offline_devices }}
+                    </div>
                     <div class="stat-sub">Unreachable</div>
                 </div>
-
                 <div class="stat-card">
                     <div class="stat-card-header">
                         <span class="stat-label">Avg Response</span>
@@ -125,66 +119,15 @@
                             <i class="fa-solid fa-stopwatch"></i>
                         </div>
                     </div>
-                    <div class="stat-value">{{ avg_response }}<span style="font-size:18px;font-weight:500;color:var(--muted);">ms</span></div>
+                    <div class="stat-value" id="stat-avg">
+                        {{ avg_response }}<span class="stat-unit">ms</span>
+                    </div>
                     <div class="stat-sub">Ping latency</div>
                 </div>
-
             </div>
 
-            <!-- DEVICE CARDS -->
-            <div class="section-header">
-                <div class="section-title">
-                    <i class="fa-solid fa-network-wired"></i>
-                    Device Status
-                </div>
-                <button class="btn-add" onclick="openAddDevice(event)">
-                    <i class="fa-solid fa-plus"></i>
-                    Add Device
-                </button>
-            </div>
-
-            <div class="device-grid">
-                {% for device in results %}
-                <div class="device-card {{ 'online' if device.status == 'ONLINE' else 'offline' }}">
-                    <div class="device-card-header">
-                        <div>
-                            <div class="device-name">{{ device.name }}</div>
-                            <div class="device-ip">{{ device.ip }}</div>
-                        </div>
-                        <div class="status-dot {{ 'online' if device.status == 'ONLINE' else 'offline' }}">
-                            <span class="dot"></span>
-                            {{ device.status }}
-                        </div>
-                    </div>
-                    <div class="device-meta">
-                        <div class="device-meta-item">
-                            <span class="meta-label">Response</span>
-                            <span class="meta-value">
-                                {% if device.status == 'ONLINE' %}
-                                    {{ device.response_time }} ms
-                                {% else %}
-                                    —
-                                {% endif %}
-                            </span>
-                        </div>
-                        <div class="device-meta-item">
-                            <span class="meta-label">Last Check</span>
-                            <span class="meta-value">{{ device.timestamp }}</span>
-                        </div>
-                    </div>
-                </div>
-                {% else %}
-                <div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--muted);background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius);">
-                    <i class="fa-solid fa-network-wired" style="font-size:32px;opacity:0.3;display:block;margin-bottom:12px;"></i>
-                    <p style="font-size:14px;">No devices configured. Click <strong>Add Device</strong> to get started.</p>
-                </div>
-                {% endfor %}
-            </div>
-
-            <!-- CHARTS ROW -->
+            <!-- CHARTS — placed BEFORE device grid so they always render -->
             <div class="charts-row">
-
-                <!-- Response time bar chart -->
                 <div class="chart-card">
                     <div class="chart-card-header">
                         <div class="chart-title">
@@ -198,10 +141,10 @@
                             </div>
                         </div>
                     </div>
-                    <canvas id="responseChart" height="180"></canvas>
+                    <div class="chart-canvas-wrap">
+                        <canvas id="responseChart"></canvas>
+                    </div>
                 </div>
-
-                <!-- Donut chart -->
                 <div class="chart-card">
                     <div class="chart-card-header">
                         <div class="chart-title">
@@ -212,12 +155,83 @@
                     <div class="donut-wrap">
                         <canvas id="uptimeChart" width="160" height="160"></canvas>
                         <div class="donut-label">
-                            <div class="donut-pct" id="uptimePct">—</div>
+                            <div class="donut-pct" id="uptimePct">
+                                {% if total_devices > 0 %}
+                                    {{ ((online_devices / total_devices) * 100) | round | int }}%
+                                {% else %}—{% endif %}
+                            </div>
                             <div class="donut-sub">devices online</div>
                         </div>
                     </div>
                 </div>
+            </div>
 
+            <!-- DEVICE CARDS -->
+            <div class="section-header" style="margin-top:28px;">
+                <div class="section-title">
+                    <i class="fa-solid fa-network-wired"></i>
+                    Device Status
+                    <span class="last-scan-label" id="lastScanLabel"></span>
+                </div>
+                <button class="btn-add" onclick="openAddDevice(event)">
+                    <i class="fa-solid fa-plus"></i>
+                    Add Device
+                </button>
+            </div>
+
+            <div class="device-grid" id="deviceGrid">
+                {% for device in results %}
+                <div class="device-card {{ 'online' if device.status == 'ONLINE' else 'offline' }}"
+                     id="card-{{ device.ip | replace('.', '-') }}">
+                    <div class="device-card-header">
+                        <div>
+                            <div class="device-name">{{ device.name }}</div>
+                            <div class="device-ip">{{ device.ip }}</div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+                            <div class="status-dot {{ 'online' if device.status == 'ONLINE' else 'offline' }}">
+                                <span class="dot"></span>{{ device.status }}
+                            </div>
+                            <form method="POST" action="/delete_device"
+                                  onsubmit="return confirm('Remove {{ device.name }}?')">
+                                <input type="hidden" name="ip" value="{{ device.ip }}">
+                                <button type="submit" class="btn-delete-device" title="Remove device">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="device-meta">
+                        <div class="device-meta-item">
+                            <span class="meta-label">Response</span>
+                            <span class="meta-value">
+                                {% if device.status == 'ONLINE' %}{{ device.response_time }} ms{% else %}—{% endif %}
+                            </span>
+                        </div>
+                        <div class="device-meta-item">
+                            <span class="meta-label">Uptime</span>
+                            {% if device.uptime is not none %}
+                                {% if device.uptime >= 90 %}
+                                <span class="meta-value uptime-good">{{ device.uptime }}%</span>
+                                {% else %}
+                                <span class="meta-value uptime-warn">{{ device.uptime }}%</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="meta-value uptime-none">—</span>
+                            {% endif %}
+                        </div>
+                        <div class="device-meta-item">
+                            <span class="meta-label">Last Check</span>
+                            <span class="meta-value">{{ device.timestamp }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="devices-empty">
+                    <i class="fa-solid fa-network-wired"></i>
+                    <p>No devices configured. Click <strong>Add Device</strong> to get started.</p>
+                </div>
+                {% endfor %}
             </div>
 
         </div>
@@ -228,7 +242,6 @@
         </footer>
 
     </main>
-
 </div>
 
 <!-- ADD DEVICE MODAL -->
@@ -247,7 +260,7 @@
             </div>
             <div class="modal-field">
                 <label><i class="fa-solid fa-network-wired"></i> IP Address</label>
-                <input type="text" name="ip" placeholder="e.g. 192.168.1.100" required pattern="^(\d{1,3}\.){3}\d{1,3}$|^[a-zA-Z0-9.-]+$">
+                <input type="text" name="ip" placeholder="e.g. 192.168.1.100" required>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-cancel" onclick="closeAddDevice()">Cancel</button>
@@ -260,114 +273,195 @@
     </div>
 </div>
 
+<!-- Device data injected safely — VS Code won't lint this tag -->
+<script type="application/json" id="device-data">{{ results | tojson }}</script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
 <script>
-    // Live clock
-    function updateTime() {
-        const el = document.getElementById("sidebarTime");
-        if (el) el.textContent = new Date().toLocaleTimeString();
-    }
-    updateTime();
-    setInterval(updateTime, 1000);
+// ── Clock
+function updateTime() {
+    var el = document.getElementById("sidebarTime");
+    if (el) el.textContent = new Date().toLocaleTimeString();
+}
+updateTime();
+setInterval(updateTime, 1000);
 
-    // Sidebar toggle
-    function toggleSidebar() {
-        const sb = document.getElementById("sidebar");
-        sb.classList.toggle("collapsed");
-        document.querySelector(".main-area").style.marginLeft =
-            sb.classList.contains("collapsed") ? "0" : "var(--sidebar-w)";
-    }
+// ── Sidebar
+function toggleSidebar() {
+    var sb = document.getElementById("sidebar");
+    sb.classList.toggle("collapsed");
+    document.querySelector(".main-area").style.marginLeft =
+        sb.classList.contains("collapsed") ? "0" : "var(--sidebar-w)";
+}
 
-    // Modal
-    function openAddDevice(e) {
-        if (e) e.preventDefault();
-        document.getElementById("addDeviceModal").classList.add("open");
-    }
-    function closeAddDevice() {
-        document.getElementById("addDeviceModal").classList.remove("open");
-    }
-    document.getElementById("addDeviceModal").addEventListener("click", function(e) {
-        if (e.target === this) closeAddDevice();
+// ── Modal
+function openAddDevice(e) {
+    if (e) e.preventDefault();
+    document.getElementById("addDeviceModal").classList.add("open");
+}
+function closeAddDevice() {
+    document.getElementById("addDeviceModal").classList.remove("open");
+}
+document.getElementById("addDeviceModal").addEventListener("click", function(e) {
+    if (e.target === this) closeAddDevice();
+});
+
+// ── Chart data (safe — no Jinja in JS)
+var deviceData  = JSON.parse(document.getElementById("device-data").textContent);
+var labels      = deviceData.map(function(d) { return d.name; });
+var responses   = deviceData.map(function(d) { return d.status === "ONLINE" ? (d.response_time || 0) : 0; });
+var onlineCount = deviceData.filter(function(d) { return d.status === "ONLINE"; }).length;
+var totalCount  = deviceData.length;
+
+var barChart   = null;
+var donutChart = null;
+
+function makeBarColors(data) {
+    return data.map(function(d) {
+        return d.status === "ONLINE" ? "rgba(59,130,246,0.75)" : "rgba(239,68,68,0.5)";
     });
+}
+function makeBarBorders(data) {
+    return data.map(function(d) {
+        return d.status === "ONLINE" ? "#3b82f6" : "#ef4444";
+    });
+}
 
-    // Chart data from Flask
-    const deviceData = {{ results | tojson }};
-    const labels = deviceData.map(d => d.name);
-    const responses = deviceData.map(d => d.status === "ONLINE" ? d.response_time : 0);
-    const online = deviceData.filter(d => d.status === "ONLINE").length;
-    const total = deviceData.length;
-
-    // Response bar chart
-    const barCtx = document.getElementById("responseChart");
-    if (barCtx) {
-        new Chart(barCtx, {
-            type: "bar",
-            data: {
-                labels,
-                datasets: [{
-                    label: "Response Time (ms)",
-                    data: responses,
-                    backgroundColor: deviceData.map(d =>
-                        d.status === "ONLINE" ? "rgba(59,130,246,0.7)" : "rgba(239,68,68,0.5)"
-                    ),
-                    borderColor: deviceData.map(d =>
-                        d.status === "ONLINE" ? "#3b82f6" : "#ef4444"
-                    ),
-                    borderWidth: 1.5,
-                    borderRadius: 6,
-                    borderSkipped: false,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: ctx => ctx.raw === 0 ? "Offline" : `${ctx.raw} ms`
+// Bar chart
+var barCtx = document.getElementById("responseChart");
+if (barCtx) {
+    barChart = new Chart(barCtx, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Response (ms)",
+                data: responses,
+                backgroundColor: makeBarColors(deviceData),
+                borderColor:     makeBarBorders(deviceData),
+                borderWidth: 1.5,
+                borderRadius: 6,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 400 },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            return ctx.raw === 0 ? " Offline" : " " + ctx.raw + " ms";
                         }
                     }
-                },
-                scales: {
-                    x: {
-                        grid: { color: "rgba(148,163,184,0.08)" },
-                        ticks: { color: "#94a3b8", font: { size: 12 } }
-                    },
-                    y: {
-                        grid: { color: "rgba(148,163,184,0.08)" },
-                        ticks: { color: "#94a3b8", font: { size: 12 } },
-                        beginAtZero: true
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: "rgba(148,163,184,0.07)" },
+                    ticks: {
+                        color: "#94a3b8",
+                        font: { size: 11 },
+                        maxRotation: 35,
+                        minRotation: 0
                     }
+                },
+                y: {
+                    grid: { color: "rgba(148,163,184,0.07)" },
+                    ticks: { color: "#94a3b8", font: { size: 11 } },
+                    beginAtZero: true
                 }
             }
-        });
+        }
+    });
+}
+
+// Donut chart
+var donutCtx = document.getElementById("uptimeChart");
+if (donutCtx) {
+    var initOnline = totalCount > 0 ? onlineCount : 0;
+    var initOff    = totalCount > 0 ? (totalCount - onlineCount) : 1;
+    donutChart = new Chart(donutCtx, {
+        type: "doughnut",
+        data: {
+            datasets: [{
+                data: [initOnline, initOff],
+                backgroundColor: ["#22c55e", "rgba(148,163,184,0.15)"],
+                borderColor:     ["#22c55e", "rgba(148,163,184,0.08)"],
+                borderWidth: 1.5
+            }]
+        },
+        options: {
+            responsive: false,
+            animation: { duration: 400 },
+            cutout: "72%",
+            plugins: { legend: { display: false }, tooltip: { enabled: false } }
+        }
+    });
+}
+
+// ── SocketIO
+var socket    = io();
+var liveBadge = document.getElementById("liveBadge");
+
+socket.on("connect", function() { liveBadge.classList.add("connected"); });
+socket.on("disconnect", function() { liveBadge.classList.remove("connected"); });
+
+socket.on("scan_update", function(data) {
+    // Stat cards
+    document.getElementById("stat-total").textContent  = data.total_devices;
+    document.getElementById("stat-online").textContent = data.online_devices;
+
+    var offEl = document.getElementById("stat-offline");
+    offEl.textContent = data.offline_devices;
+    offEl.classList.toggle("stat-red", data.offline_devices > 0);
+
+    document.getElementById("stat-avg").innerHTML =
+        data.avg_response + '<span class="stat-unit">ms</span>';
+
+    document.getElementById("lastScanLabel").textContent =
+        "· updated " + new Date().toLocaleTimeString();
+
+    // Device cards — update in-place (no DOM rebuild = no flicker)
+    data.results.forEach(function(d) {
+        var cardId = "card-" + d.ip.split(".").join("-");
+        var card   = document.getElementById(cardId);
+        if (!card) return;
+
+        card.className = "device-card " + (d.status === "ONLINE" ? "online" : "offline");
+
+        var dot = card.querySelector(".status-dot");
+        if (dot) {
+            dot.className = "status-dot " + (d.status === "ONLINE" ? "online" : "offline");
+            dot.innerHTML = '<span class="dot"></span>' + d.status;
+        }
+
+        var vals = card.querySelectorAll(".meta-value");
+        if (vals[0]) vals[0].textContent = d.status === "ONLINE" ? (d.response_time || 0) + " ms" : "—";
+        if (vals[2]) vals[2].textContent = d.timestamp;
+    });
+
+    // Update bar chart
+    if (barChart) {
+        barChart.data.labels                          = data.results.map(function(d) { return d.name; });
+        barChart.data.datasets[0].data               = data.results.map(function(d) { return d.status === "ONLINE" ? (d.response_time || 0) : 0; });
+        barChart.data.datasets[0].backgroundColor    = makeBarColors(data.results);
+        barChart.data.datasets[0].borderColor        = makeBarBorders(data.results);
+        barChart.update("none");
     }
 
-    // Uptime donut chart
-    const donutCtx = document.getElementById("uptimeChart");
-    if (donutCtx && total > 0) {
-        const pct = Math.round((online / total) * 100);
-        document.getElementById("uptimePct").textContent = pct + "%";
-        new Chart(donutCtx, {
-            type: "doughnut",
-            data: {
-                datasets: [{
-                    data: [online, total - online],
-                    backgroundColor: ["#22c55e", "rgba(148,163,184,0.15)"],
-                    borderColor: ["#22c55e", "rgba(148,163,184,0.1)"],
-                    borderWidth: 1.5,
-                    hoverBorderWidth: 2,
-                }]
-            },
-            options: {
-                responsive: false,
-                cutout: "72%",
-                plugins: { legend: { display: false }, tooltip: { enabled: false } }
-            }
-        });
-    } else if (donutCtx) {
-        document.getElementById("uptimePct").textContent = "N/A";
+    // Update donut chart
+    if (donutChart) {
+        var o = data.online_devices;
+        var t = data.total_devices;
+        donutChart.data.datasets[0].data = [o, Math.max(t - o, 0)];
+        donutChart.update("none");
+        document.getElementById("uptimePct").textContent =
+            (t > 0 ? Math.round((o / t) * 100) : 0) + "%";
     }
+});
 </script>
 {% endblock %}
