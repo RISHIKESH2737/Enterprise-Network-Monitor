@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_required
+from sqlalchemy.exc import IntegrityError
+
 from auth.models import User
 from database.db import db
 
@@ -14,19 +16,33 @@ def register():
 
     if request.method == "POST":
 
-        username = request.form.get("username")
-        email = request.form.get("email")
+        username = request.form.get("username", "").strip()
+        email = request.form.get("email", "").strip().lower()
         password = request.form.get("password")
         confirm_password = request.form.get("confirm_password")
 
-        if password != confirm_password:
-            flash("Passwords do not match", "error")
+        # Validate required fields
+        if not username or not email or not password or not confirm_password:
+            flash("All fields are required.", "error")
             return redirect(url_for("auth.register"))
 
-        existing_user = User.query.filter_by(username=username).first()
+        # Password validation
+        if password != confirm_password:
+            flash("Passwords do not match.", "error")
+            return redirect(url_for("auth.register"))
 
-        if existing_user:
-            flash("Username already exists", "error")
+        # Check username
+        existing_username = User.query.filter_by(username=username).first()
+
+        if existing_username:
+            flash("Username already exists.", "error")
+            return redirect(url_for("auth.register"))
+
+        # Check email
+        existing_email = User.query.filter_by(email=email).first()
+
+        if existing_email:
+            flash("Email already registered. Please login.", "error")
             return redirect(url_for("auth.register"))
 
         hashed_password = generate_password_hash(password)
@@ -40,12 +56,22 @@ def register():
             role=role
         )
 
-        db.session.add(new_user)
-        db.session.commit()
+        try:
+            db.session.add(new_user)
+            db.session.commit()
 
-        flash("Account created successfully", "success")
+            flash("Account created successfully.", "success")
+            return redirect(url_for("auth.login"))
 
-        return redirect(url_for("auth.login"))
+        except IntegrityError:
+            db.session.rollback()
+            flash("Username or Email already exists.", "error")
+            return redirect(url_for("auth.register"))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f"An unexpected error occurred: {e}", "error")
+            return redirect(url_for("auth.register"))
 
     return render_template(
         "register.html",
@@ -58,7 +84,7 @@ def login():
 
     if request.method == "POST":
 
-        username = request.form.get("username")
+        username = request.form.get("username", "").strip()
         password = request.form.get("password")
 
         user = User.query.filter_by(username=username).first()
@@ -67,11 +93,11 @@ def login():
 
             login_user(user)
 
-            flash("Login successful", "success")
+            flash("Login successful.", "success")
 
             return redirect(url_for("dashboard.dashboard"))
 
-        flash("Invalid username or password", "error")
+        flash("Invalid username or password.", "error")
 
     return render_template("login.html")
 
@@ -82,6 +108,6 @@ def logout():
 
     logout_user()
 
-    flash("Logged out successfully", "success")
+    flash("Logged out successfully.", "success")
 
     return redirect(url_for("auth.login"))
